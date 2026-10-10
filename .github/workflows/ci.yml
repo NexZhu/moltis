@@ -62,7 +62,7 @@ jobs:
       OCEANBASE_BUILD_WORKFLOW_RUN_ID: ${{ inputs.build_workflow_run_id || vars.OCEANBASE_BUILD_WORKFLOW_RUN_ID }}
       OCEANBASE_BUILD_ARTIFACT_ID: ${{ inputs.build_artifact_id || vars.OCEANBASE_BUILD_ARTIFACT_ID }}
       OCEANBASE_MANIFEST_SHA256: ${{ inputs.manifest_sha256 || vars.OCEANBASE_MANIFEST_SHA256 }}
-      MOLTIS_U1_PROOF_DIR: ${{ runner.temp }}/image-proof
+      MOLTIS_U1_PROOF_DIR: image-proof
     steps:
       # Never execute a PR-provided verifier as the approval authority.
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -115,7 +115,7 @@ jobs:
       OCEANBASE_BUILD_WORKFLOW_RUN_ID: ${{ needs.image-verify.outputs.build_workflow_run_id }}
       OCEANBASE_BUILD_ARTIFACT_ID: ${{ needs.image-verify.outputs.build_artifact_id }}
       OCEANBASE_MANIFEST_SHA256: ${{ needs.image-verify.outputs.manifest_sha256 }}
-      MOLTIS_U1_PROOF_DIR: ${{ runner.temp }}/image-proof
+      MOLTIS_U1_PROOF_DIR: image-proof
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:

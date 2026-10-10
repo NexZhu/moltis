@@ -94,7 +94,7 @@ jobs:
       OCEANBASE_BUILD_WORKFLOW_RUN_ID: ${{ needs.build-sign.outputs.build_workflow_run_id }}
       OCEANBASE_BUILD_ARTIFACT_ID: ${{ needs.build-sign.outputs.build_artifact_id }}
       OCEANBASE_MANIFEST_SHA256: ${{ needs.build-sign.outputs.manifest_sha256 }}
-      MOLTIS_U1_PROOF_DIR: ${{ runner.temp }}/image-proof
+      MOLTIS_U1_PROOF_DIR: image-proof
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -138,7 +138,7 @@ jobs:
       OCEANBASE_BUILD_WORKFLOW_RUN_ID: ${{ needs.build-sign.outputs.build_workflow_run_id }}
       OCEANBASE_BUILD_ARTIFACT_ID: ${{ needs.build-sign.outputs.build_artifact_id }}
       OCEANBASE_MANIFEST_SHA256: ${{ needs.build-sign.outputs.manifest_sha256 }}
-      MOLTIS_U1_PROOF_DIR: ${{ runner.temp }}/image-proof
+      MOLTIS_U1_PROOF_DIR: image-proof
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
