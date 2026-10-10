@@ -8668,6 +8668,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "moltis-storage"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "reqwest 0.13.2",
+ "secrecy 0.8.0",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "sqlx",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
 name = "moltis-swift-bridge"
 version = "0.1.0"
 dependencies = [
@@ -12480,6 +12495,7 @@ dependencies = [
  "memchr",
  "once_cell",
  "percent-encoding",
+ "rustls 0.23.39",
  "serde",
  "serde_json",
  "sha2 0.10.9",
@@ -12489,6 +12505,7 @@ dependencies = [
  "tokio-stream",
  "tracing",
  "url",
+ "webpki-roots 0.26.11",
 ]
 
 [[package]]

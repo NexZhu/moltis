@@ -194,11 +194,11 @@ if [[ -n "${LOCAL_VALIDATE_TEST_CMD:-}" ]]; then
 elif command -v just >/dev/null 2>&1 && [[ -f justfile ]]; then
   test_cmd="just test"
 else
-  test_cmd="cargo +${nightly_toolchain} nextest run --all-features --profile ci"
+  test_cmd="cargo +${nightly_toolchain} nextest run --workspace --exclude moltis-storage --all-features --profile ci"
 fi
 e2e_cmd="${LOCAL_VALIDATE_E2E_CMD:-cd crates/web/ui && if [ ! -d node_modules ]; then npm ci; fi && npm run e2e:install && npm run e2e}"
 ollama_qwen_e2e_cmd="${LOCAL_VALIDATE_OLLAMA_QWEN_E2E_CMD:-cd crates/web/ui && if [ ! -d node_modules ]; then npm ci; fi && npm run e2e:install && MOLTIS_E2E_OLLAMA_QWEN_LIVE=1 npx playwright test --project=ollama-qwen-live e2e/specs/ollama-qwen-live.spec.js}"
-coverage_cmd="${LOCAL_VALIDATE_COVERAGE_CMD:-cargo +${nightly_toolchain} llvm-cov --workspace --all-features --html}"
+coverage_cmd="${LOCAL_VALIDATE_COVERAGE_CMD:-cargo +${nightly_toolchain} llvm-cov --workspace --exclude moltis-storage --all-features --html}"
 macos_app_cmd="${LOCAL_VALIDATE_MACOS_APP_CMD:-./scripts/build-swift-bridge.sh && ./scripts/generate-swift-project.sh && ./scripts/lint-swift.sh && xcodebuild -project apps/macos/Moltis.xcodeproj -scheme Moltis -configuration Release -destination \"platform=macOS\" -derivedDataPath apps/macos/.derivedData-local-validate CODE_SIGNING_ALLOWED=NO build}"
 ios_app_cmd="${LOCAL_VALIDATE_IOS_APP_CMD:-cargo run -p moltis-schema-export -- apps/ios/GraphQL/Schema/schema.graphqls && ./scripts/generate-ios-project.sh && ./scripts/generate-ios-graphql.sh && ./scripts/generate-ios-project.sh && xcodebuild -project apps/ios/Moltis.xcodeproj -scheme Moltis -configuration Debug -destination \"generic/platform=iOS\" CODE_SIGNING_ALLOWED=NO build}"
 build_cmd="${LOCAL_VALIDATE_BUILD_CMD:-cargo +${nightly_toolchain} build --workspace --all-features --all-targets}"
@@ -312,6 +312,7 @@ build_targeted_rust_test_cmd() {
     local package
     package="$(package_name_for_path "$file")"
     [[ -n "$package" ]] || continue
+    [[ "$package" != moltis-storage ]] || continue
 
     local base_cmd
     base_cmd="$(nextest_base_cmd_for_package "$package")"
@@ -394,14 +395,14 @@ if [[ "$(uname -s)" == "Darwin" ]] && ! command -v nvcc >/dev/null 2>&1; then
     if command -v just >/dev/null 2>&1 && [[ -f justfile ]]; then
       test_cmd="just test"
     else
-      test_cmd="cargo +${nightly_toolchain} nextest run --workspace --all-features --exclude moltis-providers --exclude moltis-gateway && cargo +${nightly_toolchain} nextest run -p moltis-providers --features local-llm-metal && cargo +${nightly_toolchain} nextest run -p moltis-gateway --features local-llm-metal"
+      test_cmd="cargo +${nightly_toolchain} nextest run --workspace --all-features --exclude moltis-storage --exclude moltis-providers --exclude moltis-gateway && cargo +${nightly_toolchain} nextest run -p moltis-providers --features local-llm-metal && cargo +${nightly_toolchain} nextest run -p moltis-gateway --features local-llm-metal"
     fi
   fi
   if [[ -z "${LOCAL_VALIDATE_BUILD_CMD:-}" ]]; then
     build_cmd="cargo +${nightly_toolchain} build --workspace --all-targets --exclude moltis-providers --exclude moltis-gateway && cargo +${nightly_toolchain} build -p moltis-providers --all-targets --features local-llm-metal && cargo +${nightly_toolchain} build -p moltis-gateway --all-targets --features local-llm-metal"
   fi
   if [[ -z "${LOCAL_VALIDATE_COVERAGE_CMD:-}" ]]; then
-    coverage_cmd="cargo +${nightly_toolchain} llvm-cov --workspace --html"
+    coverage_cmd="cargo +${nightly_toolchain} llvm-cov --workspace --exclude moltis-storage --html"
   fi
   build_cmd="$(strip_all_features_flag "$build_cmd")"
   coverage_cmd="$(strip_all_features_flag "$coverage_cmd")"

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "source_commit": "071f4d9c82841d3ecb2d0004ef9213766308b714",
+  "package_version": "5.0.1.0-100000042026072912.el8",
+  "registration_source": "src/storage/fts/ob_fts_builtin_parser_register.cpp",
+  "external_plugins": [],
+  "external_dictionaries": [],
+  "candidates": [
+    {"id": "default", "sql_parser": "space", "delivery": "built-in", "configuration": {}, "dictionary": "none"},
+    {"id": "ngram", "sql_parser": "ngram", "delivery": "built-in", "configuration": {}, "dictionary": "none"},
+    {"id": "ik", "sql_parser": "ik", "delivery": "built-in", "configuration": {}, "dictionary": "fixed RPM built-in IK dictionary; no host override"}
+  ],
+  "query_mode_configuration": {"sql_hybrid_bool_rrf60": {"match_operator": "AND", "omit_empty_bool_clauses": true, "required_prefix": "+", "excluded_prefix": "-", "rank_constant": 60}, "native_boolean": {"literal_terms": "Unicode alphanumeric segments preserving underscore and dot", "required_prefix": "+", "excluded_prefix": "-", "quote_terms": true}},
+  "tables": {
+    "memory_chunks_search": {"candidate_order": ["default", "ngram", "ik"], "query_modes": ["sql_hybrid_bool_rrf60"]},
+    "code_chunks_search": {"candidate_order": ["default", "ngram", "ik"], "query_modes": ["sql_hybrid_bool_rrf60"]},
+    "connector_items": {"candidate_order": ["default", "ngram", "ik"], "query_modes": ["native_boolean"]},
+    "connector_items_search": {"candidate_order": ["default", "ngram", "ik"], "query_modes": ["native_boolean"]}
+  },
+  "selection": "first candidate with first mode passing every frozen positive/negative fixture on both architectures; no selection recorded before full U1"
+}

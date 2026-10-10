@@ -1,0 +1,165 @@
+name: OceanBase Image
+on:
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: oceanbase-image-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build-sign:
+    if: ${{ github.ref == vars.OCEANBASE_TRUSTED_REF && github.repository == vars.OCEANBASE_TRUSTED_REPOSITORY }}
+    environment: oceanbase-image-release
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    outputs:
+      image_digest: ${{ steps.publish.outputs.image_digest }}
+      source_commit: ${{ github.sha }}
+      build_workflow_run_id: ${{ github.run_id }}
+      build_artifact_id: ${{ steps.artifact.outputs.artifact-id }}
+      manifest_sha256: ${{ steps.publish.outputs.manifest_sha256 }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
+        with:
+          cosign-release: v2.4.1
+      - name: Build and publish both architectures with actual BuildKit attestations
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE_REPOSITORY: ${{ vars.OCEANBASE_IMAGE_REPOSITORY }}
+          TRUSTED_REPOSITORY: ${{ vars.OCEANBASE_TRUSTED_REPOSITORY }}
+          TRUSTED_REF: ${{ vars.OCEANBASE_TRUSTED_REF }}
+        run: |
+          test "$GITHUB_REPOSITORY" = "$TRUSTED_REPOSITORY"
+          test "$GITHUB_REF" = "$TRUSTED_REF"
+          gh api "repos/$GITHUB_REPOSITORY/branches/${GITHUB_REF#refs/heads/}" --jq '.protected' | grep -qx true
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker run --privileged --rm tonistiigi/binfmt@sha256:ea2f0dd74e74f101df59f9a6b31d0960994060c7982a921cbceecee0f1841125 --install arm64
+          docker buildx create --use --driver docker-container --driver-opt image=moby/buildkit@sha256:832fa7aa1eb3deb56fa62ae933bfa42dad9a83ff4824dbbaf173b49c722b59d0
+          docker buildx build --platform linux/amd64,linux/arm64 --file deploy/oceanbase/Dockerfile --build-arg "SOURCE_COMMIT=$GITHUB_SHA" --provenance=mode=max --attest type=sbom,generator=docker/buildkit-syft-scanner@sha256:e930c2697be77cb7271d316ecfa78768b5eac73de3b16018ed38eb0ea0b5a7cb --tag "$IMAGE_REPOSITORY:build-$GITHUB_RUN_ID" --metadata-file image-build.json --push .
+      - name: Source-bind and cryptographically sign publication
+        id: publish
+        env:
+          IMAGE_REPOSITORY: ${{ vars.OCEANBASE_IMAGE_REPOSITORY }}
+        run: |
+          IMAGE_DIGEST="$IMAGE_REPOSITORY@$(jq -er '."containerimage.digest"' image-build.json)"
+          export IMAGE_DIGEST
+          python3 deploy/oceanbase/build-proof.py
+          cosign sign --yes "$IMAGE_DIGEST"
+          cosign attest --yes --type https://slsa.dev/provenance/v1 --predicate image-proof/provenance.json "$IMAGE_DIGEST"
+          cosign attest --yes --type https://moltis.org/oceanbase/sbom/v1 --predicate image-proof/sbom.json "$IMAGE_DIGEST"
+          echo "image_digest=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
+          echo "manifest_sha256=$(sha256sum image-proof/oceanbase-image-manifest.json | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+      - uses: ./.github/actions/sign-artifacts
+        with:
+          files: oceanbase-image-manifest.json
+          working-directory: image-proof
+      - name: Publish transparency bundle
+        working-directory: image-proof
+        run: |
+          cosign sign-blob --yes --bundle oceanbase-image-manifest.json.bundle --output-signature oceanbase-image-manifest.json.sig --output-certificate oceanbase-image-manifest.json.crt oceanbase-image-manifest.json
+          for fixture in oceanbase-negative-*.json; do
+            cosign sign-blob --yes --bundle "$fixture.bundle" --output-signature "$fixture.sig" --output-certificate "$fixture.crt" "$fixture"
+          done
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        id: artifact
+        with:
+          name: oceanbase-image-manifest-${{ github.run_id }}
+          path: |
+            image-proof/oceanbase-image-manifest.json*
+            image-proof/oceanbase-negative-*.json*
+          if-no-files-found: error
+          retention-days: 90
+  image-verify:
+    needs: build-sign
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+    outputs:
+      image_digest: ${{ steps.verify.outputs.image_digest }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OCEANBASE_TRUSTED_REPOSITORY: ${{ vars.OCEANBASE_TRUSTED_REPOSITORY }}
+      OCEANBASE_TRUSTED_REF: ${{ vars.OCEANBASE_TRUSTED_REF }}
+      OCEANBASE_IMAGE_REPOSITORY: ${{ vars.OCEANBASE_IMAGE_REPOSITORY }}
+      OCEANBASE_SOURCE_COMMIT: ${{ needs.build-sign.outputs.source_commit }}
+      OCEANBASE_BUILD_WORKFLOW_RUN_ID: ${{ needs.build-sign.outputs.build_workflow_run_id }}
+      OCEANBASE_BUILD_ARTIFACT_ID: ${{ needs.build-sign.outputs.build_artifact_id }}
+      OCEANBASE_MANIFEST_SHA256: ${{ needs.build-sign.outputs.manifest_sha256 }}
+      MOLTIS_U1_PROOF_DIR: ${{ runner.temp }}/image-proof
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
+        with:
+          cosign-release: v2.4.1
+      - name: Verify exact same-run approved publication without a database
+        id: verify
+        run: |
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          args=(--source-commit "$OCEANBASE_SOURCE_COMMIT" --build-workflow-run-id "$OCEANBASE_BUILD_WORKFLOW_RUN_ID" --build-artifact-id "$OCEANBASE_BUILD_ARTIFACT_ID" --manifest-sha256 "$OCEANBASE_MANIFEST_SHA256" --artifact-dir "$MOLTIS_U1_PROOF_DIR")
+          python3 deploy/oceanbase/fetch-image-artifact.py "${args[@]}"
+          digest=$(bash deploy/oceanbase/verify-image.sh "${args[@]}")
+          python3 deploy/oceanbase/test-image-proof.py
+          echo "image_digest=$digest" >> "$GITHUB_OUTPUT"
+  image-acceptance:
+    needs: [build-sign, image-verify]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-22.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+    env:
+      OCEANBASE_IMAGE_DIGEST: ${{ needs.image-verify.outputs.image_digest }}
+      OB_ACCOUNT_HOST_MAX_BYTES: ${{ vars.OB_ACCOUNT_HOST_MAX_BYTES }}
+      GH_TOKEN: ${{ github.token }}
+      OCEANBASE_TRUSTED_REPOSITORY: ${{ vars.OCEANBASE_TRUSTED_REPOSITORY }}
+      OCEANBASE_TRUSTED_REF: ${{ vars.OCEANBASE_TRUSTED_REF }}
+      OCEANBASE_IMAGE_REPOSITORY: ${{ vars.OCEANBASE_IMAGE_REPOSITORY }}
+      OCEANBASE_SOURCE_COMMIT: ${{ needs.build-sign.outputs.source_commit }}
+      OCEANBASE_BUILD_WORKFLOW_RUN_ID: ${{ needs.build-sign.outputs.build_workflow_run_id }}
+      OCEANBASE_BUILD_ARTIFACT_ID: ${{ needs.build-sign.outputs.build_artifact_id }}
+      OCEANBASE_MANIFEST_SHA256: ${{ needs.build-sign.outputs.manifest_sha256 }}
+      MOLTIS_U1_PROOF_DIR: ${{ runner.temp }}/image-proof
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
+        with:
+          cosign-release: v2.4.1
+      - uses: dtolnay/rust-toolchain@f7ccc83f9ed1e5b9c81d8a67d7ad1a747e22a561 # master
+        with:
+          toolchain: nightly-2026-06-20
+      - name: Fetch source-bound evidence for U1
+        run: |
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          python3 deploy/oceanbase/fetch-image-artifact.py --source-commit "$OCEANBASE_SOURCE_COMMIT" --build-workflow-run-id "$OCEANBASE_BUILD_WORKFLOW_RUN_ID" --build-artifact-id "$OCEANBASE_BUILD_ARTIFACT_ID" --manifest-sha256 "$OCEANBASE_MANIFEST_SHA256" --artifact-dir "$MOLTIS_U1_PROOF_DIR"
+      - name: Exercise real image and full U1 on native architecture
+        env:
+          EXPECTED_ARCH: ${{ matrix.arch }}
+        run: bash deploy/oceanbase/tests/image-acceptance.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: oceanbase-u1-${{ matrix.arch }}-${{ github.run_id }}
+          path: target/oceanbase-u1-evidence/
+          if-no-files-found: error

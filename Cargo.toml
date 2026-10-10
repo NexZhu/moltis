@@ -138,6 +138,7 @@ members = [
   "crates/skills",
   "crates/slack",
   "crates/splitter",
+  "crates/storage",
   "crates/swift-bridge",
   "crates/tailscale",
   "crates/telegram",
@@ -227,7 +228,7 @@ tracing-subscriber    = { features = ["env-filter", "json"], version = "0.3" }
 clap      = { features = ["derive", "env"], version = "4" }
 indicatif = "0.17"
 # Database
-sqlx = { features = ["migrate", "runtime-tokio", "sqlite"], version = "0.8" }
+sqlx = { features = ["migrate", "runtime-tokio", "sqlite", "mysql", "tls-rustls-ring"], version = "0.8" }
 # Embedded key-value store (zvec memory backend cache + file index)
 redb = "2"
 # Zvec vector database (memory backend)

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "oceanbase_release": "v5.0.1_CE",
+  "oceanbase_source_commit": "071f4d9c82841d3ecb2d0004ef9213766308b714",
+  "rpm_version": "5.0.1.0-100000042026072912.el8",
+  "base_image": "docker.io/oceanbase/oceanbase-ce@sha256:eaa2c3b3513fa21e4a658f197c1deb93c9d6b6eb742cfa5ef0f085f82b9cec54",
+  "docker_images_commit": "1752971608da31981d349f47d14fe82e27d95399",
+  "docker_images_tree": "11f056b387c4e7dd15e4ce8c90eb32028c9bcb0d",
+  "base_tools": "OpenSSL, rpm, curl and runtime libraries inherited from immutable base; obclient pinned separately; no yum/apt/pip or runtime download",
+  "obclient_version": "2.2.14-1.el8",
+  "obclient_source": "https://mirrors.oceanbase.com/oceanbase/community/stable/el/8",
+  "python_release": "3.12.11+20251007",
+  "python_source": "https://github.com/astral-sh/python-build-standalone/releases/tag/20251007",
+  "buildkit_image": "moby/buildkit@sha256:832fa7aa1eb3deb56fa62ae933bfa42dad9a83ff4824dbbaf173b49c722b59d0",
+  "sbom_scanner": "docker/buildkit-syft-scanner@sha256:e930c2697be77cb7271d316ecfa78768b5eac73de3b16018ed38eb0ea0b5a7cb",
+  "binfmt_image": "tonistiigi/binfmt@sha256:ea2f0dd74e74f101df59f9a6b31d0960994060c7982a921cbceecee0f1841125",
+  "upstream_script_blobs": {
+    "Dockerfile": "65ab2467e46db5a0b6c16c8a5434ce46b875a55e",
+    "start.sh": "05b604bbb8993baef923e4bc6b911aa5da224ef0",
+    "observer-template.yaml": "fce181ce297ef0a61941e9dd76e7e4277c751ce0"
+  },
+  "architectures": {
+    "amd64": {
+      "rpm_arch": "x86_64",
+      "server_sha256": "e78b4bc7380f795bd5a184bdc4eb33af5400d06c938243edfd52dd291c282a04",
+      "libs_sha256": "fa2c5648257e4cfa67b0bcbeb16273e5301cebbaf0eeafa8ceee92c273e5b6fa",
+      "obclient_sha256": "7042bc40598c3c57f32b0b4e1cf9d050ee58748635e635b1b9ae5f49c0975045",
+      "python_sha256": "f98121eb1fb2b05a25c1f3d2fe7cf08c3a2468c350785df3d84c2516e7280d3f"
+    },
+    "arm64": {
+      "rpm_arch": "aarch64",
+      "server_sha256": "e239138ecd55573bc2140f1a83792a63db5557680fbd77cc7e1c99ef3dbd80d9",
+      "libs_sha256": "d30df7bcb5a5a6a240921f5e8a2969eb28250d6a4b42a4e11c688ab7369e790a",
+      "obclient_sha256": "2c54c799aa1168e94d5385c1e19f680e41f898550e952e694dd83345aa686ca4",
+      "python_sha256": "05d9207e41c36fbc2d80a51d9bd5d574ed3eb1c620ead49e7fcd57cc2b64edfd"
+    }
+  }
+}

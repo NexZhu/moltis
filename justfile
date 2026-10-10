@@ -279,9 +279,9 @@ build-test: build-web-assets
     trap 'rm -f "${RUST_LOG}" "${E2E_LOG}"' EXIT
 
     if [ "$(uname -s)" = "Darwin" ]; then
-        cargo +{{nightly_toolchain}} nextest run --workspace > "${RUST_LOG}" 2>&1 &
+        cargo +{{nightly_toolchain}} nextest run --workspace --exclude moltis-storage > "${RUST_LOG}" 2>&1 &
     else
-        cargo +{{nightly_toolchain}} nextest run --workspace --all-features > "${RUST_LOG}" 2>&1 &
+        cargo +{{nightly_toolchain}} nextest run --workspace --all-features --exclude moltis-storage > "${RUST_LOG}" 2>&1 &
     fi
     TEST_PID=$!
 
@@ -375,9 +375,9 @@ test:
     if [ "$(uname -s)" = "Darwin" ]; then
         cargo +{{nightly_toolchain}} build --workspace --all-targets
         just codesign-debug
-        cargo +{{nightly_toolchain}} nextest run --workspace
+        cargo +{{nightly_toolchain}} nextest run --workspace --exclude moltis-storage
     else
-        cargo +{{nightly_toolchain}} nextest run --workspace --all-features
+        cargo +{{nightly_toolchain}} nextest run --workspace --all-features --exclude moltis-storage
     fi
 
 # Run contract test suites (channel, provider, memory, tools)

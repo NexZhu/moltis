@@ -1,0 +1,19 @@
+[package]
+description       = "OceanBase storage capability acceptance gates"
+edition.workspace = true
+name              = "moltis-storage"
+version.workspace = true
+
+[dev-dependencies]
+anyhow     = { workspace = true }
+reqwest    = { workspace = true }
+secrecy    = { workspace = true }
+serde      = { workspace = true }
+serde_json = { workspace = true }
+sha2       = { workspace = true }
+sqlx       = { features = ["macros"], workspace = true }
+tokio      = { workspace = true }
+uuid       = { workspace = true }
+
+[lints]
+workspace = true

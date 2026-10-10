@@ -1,0 +1,62 @@
+services:
+  oceanbase:
+    image: ${OCEANBASE_IMAGE_DIGEST:?Run verify-image.sh and supply its exact digest output}
+    hostname: oceanbase
+    environment:
+      OB_TENANT: ${OB_TENANT:-moltis}
+      OB_ROOT_PASSWORD_FILE: ${OB_ROOT_PASSWORD_FILE:-/run/root-init/root.env}
+    volumes:
+      - oceanbase-data:/var/lib/oceanbase
+      - type: bind
+        source: ${OCEANBASE_MATERIAL_DIR:?Absolute operator-owned material directory}/root-init
+        target: /run/root-init
+        read_only: true
+      - type: bind
+        source: ${OCEANBASE_MATERIAL_DIR}/root-recovery
+        target: /run/root-recovery
+        read_only: true
+      - type: bind
+        source: ${OCEANBASE_MATERIAL_DIR}/server-private
+        target: /run/server-private
+        read_only: true
+      - type: bind
+        source: ${OCEANBASE_MATERIAL_DIR}/public-trust
+        target: /run/public-trust
+        read_only: true
+    tmpfs:
+      - /run
+    mem_limit: 6g
+    cpus: 4
+    networks: [database]
+    restart: "no"
+  platform-init:
+    image: ${OCEANBASE_IMAGE_DIGEST:?Verified digest required}
+    profiles: [init]
+    network_mode: service:oceanbase
+    depends_on:
+      oceanbase:
+        condition: service_healthy
+    environment:
+      OB_APPROVED_SQL_HOST: 127.0.0.1
+    entrypoint: [python3, /opt/moltis-oceanbase/platform-init.py]
+    command:
+      - --prefix=${DATABASE_PREFIX:-moltis}
+      - --username=${PLATFORM_DB_USER:-moltis_platform}
+      - --sql-host=${PLATFORM_DB_SQL_HOST:?Explicit canonical account source host required}
+      - --root-sql-host=%
+      - --host-max-bytes=${OB_ACCOUNT_HOST_MAX_BYTES:?U1-proven bound required}
+      - --runtime-uid=${MOLTIS_RUNTIME_UID:?Actual application UID required}
+      - --tenant=${OB_TENANT:-moltis}
+    volumes:
+      - ${OCEANBASE_MATERIAL_DIR}/root-init:/run/root-init
+      - ${OCEANBASE_MATERIAL_DIR}/root-recovery:/run/root-recovery:ro
+      - ${OCEANBASE_MATERIAL_DIR}/public-trust:/run/public-trust:ro
+      - ${OCEANBASE_MATERIAL_DIR}/platform:/run/platform
+    tmpfs: [/run]
+networks:
+  database:
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.gateway_mode_ipv4: isolated
+volumes:
+  oceanbase-data:

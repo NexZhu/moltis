@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "memory_limit_bytes": 6442450944,
+  "profiles": [
+    {
+      "id": "chunks256",
+      "chunks_per_logical": 256,
+      "dimensions": [
+        32,
+        768,
+        1536,
+        4096
+      ],
+      "memory_budget_bytes": 5368709120,
+      "headroom_bytes": 1073741824,
+      "current_generations": 1,
+      "next_generations": 1,
+      "retained_generations": 1,
+      "workspace_bytes": 8388608,
+      "gateway_query_load": 2,
+      "external_tool_queries": 2,
+      "fixture_sha256": "32dac95ab76ce1b48cfbe1f965d891ff1ca6ded790228fea94ea249bf8137edf"
+    },
+    {
+      "id": "chunks512",
+      "chunks_per_logical": 512,
+      "dimensions": [
+        32,
+        768,
+        1536,
+        4096
+      ],
+      "memory_budget_bytes": 5368709120,
+      "headroom_bytes": 1073741824,
+      "current_generations": 1,
+      "next_generations": 1,
+      "retained_generations": 1,
+      "workspace_bytes": 8388608,
+      "gateway_query_load": 2,
+      "external_tool_queries": 2,
+      "fixture_sha256": "32dac95ab76ce1b48cfbe1f965d891ff1ca6ded790228fea94ea249bf8137edf"
+    },
+    {
+      "id": "chunks1024",
+      "chunks_per_logical": 1024,
+      "dimensions": [
+        32,
+        768,
+        1536,
+        4096
+      ],
+      "memory_budget_bytes": 5368709120,
+      "headroom_bytes": 1073741824,
+      "current_generations": 1,
+      "next_generations": 1,
+      "retained_generations": 1,
+      "workspace_bytes": 8388608,
+      "gateway_query_load": 2,
+      "external_tool_queries": 2,
+      "fixture_sha256": "32dac95ab76ce1b48cfbe1f965d891ff1ca6ded790228fea94ea249bf8137edf"
+    }
+  ],
+  "selection_order": [
+    "chunks256",
+    "chunks512",
+    "chunks1024"
+  ],
+  "seed_profile_id": "chunks256"
+}

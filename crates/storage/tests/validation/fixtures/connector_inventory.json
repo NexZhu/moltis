@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "baseline_sources": {
+    "crates/connectors/migrations/20260806000000_connectors_init.sql": "0c20d0b0e32c8fbc7ca5fcfc9347cb1f90181c616fe505a8d6a43a015d57a2dc",
+    "crates/connectors/migrations/20260808000000_prompt_plan_source_search.sql": "4afad7ff1186fc72a7b8774d71f104b5f66a0bd8dff9b908f80e0ca23fb0a14c",
+    "crates/connectors/migrations/20260811000000_account_source_key.sql": "4fbc8b595f88e5f9246579b2444ab05389d93857219894be6588fbbd94862c73",
+    "crates/connectors/src/store.rs": "97d26cc9902b982d99306a6ae9f248947d393a18d222e47b058c427c909452c1"
+  },
+  "schema_sha256": "fe8deff2a3b725b56bf528f8cacebfea6e7e9a88e6c3009d8b2d48b126b71bf3",
+  "query_contract": {
+    "fulltext": "score DESC, binary item_id ASC",
+    "bindings": [
+      "text",
+      "account_id",
+      "dataset_id",
+      "include_deleted",
+      "text",
+      "limit",
+      "offset"
+    ],
+    "direct_first": true,
+    "fallback": "ORGANIZATION HEAP; unique item_id + fulltext; same transaction source/projection"
+  }
+}

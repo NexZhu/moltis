@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "parser_order": ["default", "ngram", "ik"],
+  "modes": {"memory_chunks_search": "sql_hybrid_bool_rrf60", "code_chunks_search": "sql_hybrid_bool_rrf60", "connector_items": "native_boolean"},
+  "records": [
+    {"key":"english","scope":"a","content":"alpha database retrieval"},
+    {"key":"excluded","scope":"a","content":"alpha beta database"},
+    {"key":"chinese","scope":"a","content":"数据库 检索"},
+    {"key":"singlechar","scope":"a","content":"数 天气"},
+    {"key":"mixed","scope":"a","content":"OceanBase 数据库 alpha"},
+    {"key":"snake","scope":"a","content":"user_id"},
+    {"key":"user","scope":"a","content":"user"},
+    {"key":"id","scope":"a","content":"id"},
+    {"key":"camel","scope":"a","content":"getUserName"},
+    {"key":"camelnear","scope":"a","content":"getUserCount"},
+    {"key":"cpp","scope":"a","content":"std::vector"},
+    {"key":"cppnear","scope":"a","content":"std::map"},
+    {"key":"path","scope":"a","content":"moltis.storage.query"},
+    {"key":"pathnear","scope":"a","content":"moltis.gateway.route"},
+    {"key":"scopebait","scope":"ab","content":"alpha 数据库 user_id getUserName std::vector moltis.storage.query"}
+  ],
+  "queries": [
+    {"text":"database","positive":["english","excluded"],"negative":["chinese","singlechar","mixed","snake","scopebait"]},
+    {"text":"数据库","positive":["chinese","mixed"],"negative":["singlechar","english","scopebait"]},
+    {"text":"OceanBase 数据库","positive":["mixed"],"negative":["chinese","singlechar","english","scopebait"]},
+    {"text":"user_id","positive":["snake"],"negative":["user","id","scopebait"]},
+    {"text":"getUserName","positive":["camel"],"negative":["camelnear","scopebait"]},
+    {"text":"std::vector","positive":["cpp"],"negative":["cppnear","scopebait"]},
+    {"text":"moltis.storage.query","positive":["path"],"negative":["pathnear","scopebait"]},
+    {"text":"+alpha -beta","positive":["english","mixed"],"negative":["excluded","chinese","scopebait"]}
+  ]
+}
